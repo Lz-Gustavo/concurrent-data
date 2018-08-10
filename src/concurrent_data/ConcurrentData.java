@@ -27,21 +27,21 @@ public class ConcurrentData {
 			while(scn.hasNextLine()) {
 				info.put(scn.next(), scn.next());
 			}
-			return info;
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("Exception: " +e);
-			return info;
 		}
+		
+		return info;
 	}
 	
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 		
-//		if (config_param.get("DATA:").equals(0)) {
+//		if (config_param.get("DATA:").equals("0")) {
 //			DataStruct = new BlockingQueue();
 //		}
-//		else if (config_param.get("DATA:").equals(1)) {
+//		else if (config_param.get("DATA:").equals("1")) {
 //			DataStruct = new ConcurrentMap();
 //		}
 		if (config_param.get("DATA:").equals("2")) {
@@ -61,7 +61,6 @@ public class ConcurrentData {
 		}
 
 		try {
-			
 			workers_t = new Thread[number_w];
 			
 			for (i = 0; i < number_w; i++) {
@@ -91,5 +90,8 @@ public class ConcurrentData {
 		
 		workers = new ArrayList<>();
 		GenerateWorkers(data);
+		
+		for (int i = 0; i < workers.size(); i++)
+			workers.get(i).getStatus();
 	}
 }
