@@ -1,3 +1,4 @@
+DATA: 0
 TAM: 40
 LOG: 1
 OPS: 100

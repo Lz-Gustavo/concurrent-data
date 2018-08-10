@@ -4,19 +4,18 @@ import java.util.*;
 import java.io.*;
 
 public class ConcurrentData {
-	//vector is an obselete class, but desired in this kind of simulation, 
-	//since it doesnt implemment a sync. for a whole sequence of operations
+	//vector is an obselete class because it doesnt implemment a sync. for 
+	//a whole sequence of operations, making the lock manage too costly
 	
-	public static Vector ConfigParam(File config) {
+	public static HashMap ConfigParam(File config) {
 		// extract info from config file
-		Vector info = new Vector();
+		HashMap info = new HashMap();
 
 		try {
 			Scanner scn = new Scanner(config);
 
 			while(scn.hasNextLine()) {
-				scn.next();
-				info.add(scn.next());
+				info.put(scn.next(), scn.next());
 			}
 			return info;
 		}
@@ -26,18 +25,19 @@ public class ConcurrentData {
 		}	
 	}
 	
-	public static void GenerateWorkers(Vector config_param) {
+	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 	}
 	
 	public static void main(String[] args) {
 		
 		File config_file = new File("/home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt");
-		Vector data = ConfigParam(config_file);
+		HashMap data = ConfigParam(config_file);
 		
 		System.out.println("Data Vector: ");
-		for (int i = 0; i < data.size(); i++) 
-			System.out.println(data.get(i));
+		for (Object key : data.keySet()) {
+			System.out.println(key + " " + data.get(key));
+		}
 		
 		//GenerateWorkers(data);
 	}

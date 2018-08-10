@@ -1,7 +1,7 @@
 package concurrent_data;
 
 import java.util.concurrent.*;
-import java.util.Vector;
+import java.util.HashMap;
 
 public class Worker {
 	
@@ -12,6 +12,12 @@ public class Worker {
 	private int num_read = 0;
 	private int num_write = 0;
 	
+	public Worker() {
+		Queue = null;
+		Map = null;
+		List = null;
+	}
+	
 	public Worker(BlockingQueue n_queue, ConcurrentMap n_map, CopyOnWriteArrayList n_list) {
 		
 		Queue = n_queue;
@@ -19,7 +25,7 @@ public class Worker {
 		List = n_list;
 	}
 	
-	public void Dispatch(Vector config) {
+	public void Dispatch(HashMap config) {
 		// dispatch random operation using config file param.
 	}
 	
