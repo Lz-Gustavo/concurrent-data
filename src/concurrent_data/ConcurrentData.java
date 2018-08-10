@@ -2,10 +2,20 @@ package concurrent_data;
 
 import java.util.*;
 import java.io.*;
+import java.util.concurrent.*;
 
 public class ConcurrentData {
 	//vector is an obselete class because it doesnt implemment a sync. for 
 	//a whole sequence of operations, making the lock manage too costly
+	
+	private static ArrayList<Worker> workers;
+	private static Thread workers_t[];
+	
+//	private BlockingQueue Queue = null;
+//	private ConcurrentMap Map = null;
+//	private CopyOnWriteArrayList List = null;
+	
+	private static Object DataStruct;
 	
 	public static HashMap ConfigParam(File config) {
 		// extract info from config file
@@ -19,14 +29,54 @@ public class ConcurrentData {
 			}
 			return info;
 		}
-		catch (Exception e) {
+		catch (FileNotFoundException e) {
 			System.out.println("Exception: " +e);
 			return info;
-		}	
+		}
 	}
 	
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
+		
+//		if (config_param.get("DATA:").equals(0)) {
+//			DataStruct = new BlockingQueue();
+//		}
+//		else if (config_param.get("DATA:").equals(1)) {
+//			DataStruct = new ConcurrentMap();
+//		}
+		if (config_param.get("DATA:").equals("2")) {
+			DataStruct = new CopyOnWriteArrayList();
+		}
+		
+		int i;
+		int number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
+		
+		for (i = 0; i < number_w; i++) {
+			
+			if (config_param.get("LOG:").toString().equals(1))
+				System.out.println("worker created.");
+			
+			workers.add(new Worker(DataStruct));
+			workers.get(i).LoadConfig(config_param);
+		}
+
+		try {
+			
+			workers_t = new Thread[number_w];
+			
+			for (i = 0; i < number_w; i++) {
+				workers_t[i] = new Thread(workers.get(i));
+				workers_t[i].start();
+			}
+			
+			for (i = 0; i < number_w; i++) {
+				workers_t[i].join();
+			}
+			
+		}
+		catch (InterruptedException e) {
+			System.out.println("Exception: " +e);
+		}
 	}
 	
 	public static void main(String[] args) {
@@ -39,6 +89,7 @@ public class ConcurrentData {
 			System.out.println(key + " " + data.get(key));
 		}
 		
-		//GenerateWorkers(data);
+		workers = new ArrayList<>();
+		GenerateWorkers(data);
 	}
 }

@@ -3,30 +3,41 @@ package concurrent_data;
 import java.util.concurrent.*;
 import java.util.HashMap;
 
-public class Worker {
+public class Worker implements Runnable{
 	
-	private final BlockingQueue Queue;
-	private final ConcurrentMap Map;
-	private final CopyOnWriteArrayList List;
+	private HashMap Config;
 	
+	private final Object DataStruct; 
+		
 	private int num_read = 0;
 	private int num_write = 0;
-	
-	public Worker() {
-		Queue = null;
-		Map = null;
-		List = null;
-	}
-	
-	public Worker(BlockingQueue n_queue, ConcurrentMap n_map, CopyOnWriteArrayList n_list) {
 		
-		Queue = n_queue;
-		Map = n_map;
-		List = n_list;
+	public Worker(Object n_struct) {
+		
+		if (n_struct instanceof CopyOnWriteArrayList)
+			DataStruct = (CopyOnWriteArrayList) n_struct;
+
+		else if (n_struct instanceof ConcurrentMap)
+			DataStruct = (ConcurrentMap) n_struct;
+		
+		else if (n_struct instanceof BlockingQueue)
+			DataStruct = (BlockingQueue) n_struct;
+		
+		else
+			DataStruct = null;
 	}
 	
-	public void Dispatch(HashMap config) {
+	public void LoadConfig(HashMap config) {
+		Config = config;
+		
+		CopyOnWriteArrayList test;
+	}
+	
+	@Override
+	public void run() {
 		// dispatch random operation using config file param.
+		System.out.println("Worker Running!");
+		
 	}
 	
 	public void Read(int pos, int f_pos, int data_struct) {
