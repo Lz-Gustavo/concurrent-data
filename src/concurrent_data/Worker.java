@@ -40,36 +40,44 @@ public class Worker implements Runnable{
 		// dispatch random operation using config file param.
 		System.out.println("Worker Running!");
 		
-		int n_ops = Integer.parseInt(Config.get("OPS:").toString());
-		for (int i = 0; i < n_ops; i++) {
-			
-			int random = rand.nextInt(100);
-			
-			if (random < Integer.parseInt(Config.get("READ(%):").toString())) {
-				// nextInt(MAX_VALUE) + MIN_VALUE
-				
-				int ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-							+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-				
-				int fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-							+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-			
-				while (fin_pos < ini_pos) {
-					ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-							+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-				
-					fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-							+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+		try {
+			int n_ops = Integer.parseInt(Config.get("OPS:").toString());
+			for (int i = 0; i < n_ops; i++) {
+
+				int random = rand.nextInt(100);
+
+				if (random < Integer.parseInt(Config.get("READ(%):").toString())) {
+					// nextInt(MAX_VALUE) + MIN_VALUE
+
+					int ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+
+					int fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+
+					while (fin_pos < ini_pos) {
+						ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+
+						fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+					}
+
+					Read(ini_pos, fin_pos);
+				}
+				else {
+					int pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()))
+								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
+
+					Write("conteudo", pos);
 				}
 				
-				Read(ini_pos, fin_pos);
+				Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
 			}
-			else {
-				int pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()))
-							+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
-				
-				Write("conteudo", pos);
-			}
+		}
+		catch (InterruptedException e) {
+			
+			System.out.println("Exception: " +e);
 		}
 	}
 	

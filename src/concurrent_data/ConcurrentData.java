@@ -11,11 +11,13 @@ public class ConcurrentData {
 	private static ArrayList<Worker> workers;
 	private static Thread workers_t[];
 	
+	//IDEA: use an unique object pointer to reference a single datastruct, 
+	//choosen from config param.
+	private static Object DataStruct;	
+	
 //	private BlockingQueue Queue = null;
 //	private ConcurrentMap Map = null;
 //	private CopyOnWriteArrayList List = null;
-	
-	private static Object DataStruct;
 	
 	public static HashMap ConfigParam(File config) {
 		// extract info from config file
