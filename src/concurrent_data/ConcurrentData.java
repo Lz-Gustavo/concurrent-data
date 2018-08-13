@@ -48,19 +48,31 @@ public class ConcurrentData {
 				((ConcurrentMap) DataStruct).put(i, " ");
 			}
 		}
+		else if (DataStruct instanceof ArrayList) {
+			
+			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+				((ArrayList) DataStruct).add(" ");
+			}
+		}
+		else if (DataStruct instanceof BlockingQueue) {
+			//is it necessary to fill a queue?
+		}
 	}
 	
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 		
 		if (config_param.get("DATA:").equals("0")) {
-			DataStruct = new LinkedBlockingQueue(Integer.parseInt(config_param.get("TAM:").toString()));
+			DataStruct = new CopyOnWriteArrayList();
 		}
 		else if (config_param.get("DATA:").equals("1")) {
 			DataStruct = new ConcurrentHashMap();
 		}
 		else if (config_param.get("DATA:").equals("2")) {
-			DataStruct = new CopyOnWriteArrayList();
+			DataStruct = new ArrayList();
+		}
+		else if (config_param.get("DATA:").equals("3")) {
+			DataStruct = new LinkedBlockingQueue(Integer.parseInt(config_param.get("TAM:").toString()));
 		}
 		
 		int i;

@@ -1,5 +1,6 @@
 package concurrent_data;
 
+import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +28,9 @@ public class Worker implements Runnable{
 		else if (n_struct instanceof ConcurrentMap)
 			DataStruct = (ConcurrentMap) n_struct;
 		
+		else if (n_struct instanceof ArrayList)
+			DataStruct = (ArrayList) n_struct;
+		
 		else if (n_struct instanceof BlockingQueue)
 			DataStruct = (BlockingQueue) n_struct;
 		
@@ -42,6 +46,9 @@ public class Worker implements Runnable{
 	public void run() {
 		// dispatch random operation using config file param.
 		System.out.println("Worker Running!");
+		
+		// TODO check latency between operations dispatch-finish executing
+		// and heap memory in-use by each simulation
 		
 		try {
 			int n_ops = Integer.parseInt(Config.get("OPS:").toString());
@@ -83,10 +90,8 @@ public class Worker implements Runnable{
 	}
 	
 	public void Read(int pos, int f_pos) {
-		//TODO read operation on the specific structure
 		
 		try {
-			
 			//creating an iterator creates an immutable snapshot of the data
 			//in the list at the time iterator() was called
 			if (DataStruct instanceof CopyOnWriteArrayList) {
@@ -98,6 +103,12 @@ public class Worker implements Runnable{
 			else if (DataStruct instanceof ConcurrentMap) {
 				
 				((ConcurrentMap) DataStruct).get(pos);
+			}
+			else if (DataStruct instanceof ArrayList) {
+				
+				synchronized(DataStruct) {
+					iterator = ((ArrayList) DataStruct).iterator();
+				}
 			}
 			else if (DataStruct instanceof BlockingQueue) {
 				//since WRITE just adds a single element, READS takes a single
@@ -124,6 +135,12 @@ public class Worker implements Runnable{
 		else if (DataStruct instanceof ConcurrentMap) {
 			((ConcurrentMap) DataStruct).put(pos, x);
 		}
+		else if (DataStruct instanceof ArrayList) {
+			
+			synchronized(DataStruct) {
+				((ArrayList) DataStruct).set(pos, x);
+			}
+		}
 		else if (DataStruct instanceof BlockingQueue) {
 			((BlockingQueue) DataStruct).add(x);
 		}
@@ -142,7 +159,7 @@ public class Worker implements Runnable{
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
-			System.out.println("\n=====Data Structure=====");
+			System.out.println("\n=====CoW Array Structure=====");
 			for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
 				System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
 			}
@@ -150,10 +167,18 @@ public class Worker implements Runnable{
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 			
-			System.out.println("Data Vector: ");
+			System.out.println("\n=====Concurrent Map Structure=====");
 			for (Object key : ((ConcurrentMap) DataStruct).keySet()) {
 				System.out.println("["+key+"] " + ((ConcurrentMap) DataStruct).get(key));
 			}
+		}
+		else if (DataStruct instanceof ArrayList) {
+			
+			System.out.println("\n=====ArrayList Structure=====");
+			for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
+				System.out.println("["+i+"] " +((ArrayList) DataStruct).get(i));
+			}
+			System.out.println();
 		}
 		else if (DataStruct instanceof BlockingQueue) {
 			//how to check state of the struct if reading takes out
