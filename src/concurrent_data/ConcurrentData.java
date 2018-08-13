@@ -37,6 +37,16 @@ public class ConcurrentData {
 		return info;
 	}
 	
+	public static void FillStruct(HashMap config) {
+		
+		if (DataStruct instanceof CopyOnWriteArrayList) {
+			
+			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+				((CopyOnWriteArrayList) DataStruct).add(" ");
+			}
+		}
+	}
+	
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 		
@@ -52,10 +62,11 @@ public class ConcurrentData {
 		
 		int i;
 		int number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
+		FillStruct(config_param);
 		
 		for (i = 0; i < number_w; i++) {
 			
-			if (config_param.get("LOG:").toString().equals(1))
+			if (config_param.get("LOG:").toString().equals("1"))
 				System.out.println("worker created.");
 			
 			workers.add(new Worker(DataStruct));
@@ -73,7 +84,6 @@ public class ConcurrentData {
 			for (i = 0; i < number_w; i++) {
 				workers_t[i].join();
 			}
-			
 		}
 		catch (InterruptedException e) {
 			System.out.println("Exception: " +e);
@@ -93,7 +103,12 @@ public class ConcurrentData {
 		workers = new ArrayList<>();
 		GenerateWorkers(data);
 		
-		for (int i = 0; i < workers.size(); i++)
-			workers.get(i).getStatus();
+		if (data.get("LOG:").toString().equals("1")) {
+			for (int i = 0; i < workers.size(); i++)
+				workers.get(i).getStatus();
+			
+			//all workers operate on the same data structure reference
+			workers.get(0).Show();
+		}
 	}
 }

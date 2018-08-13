@@ -20,7 +20,7 @@ public class Worker implements Runnable{
 		
 		if (n_struct instanceof CopyOnWriteArrayList)
 			DataStruct = (CopyOnWriteArrayList) n_struct;
-
+		
 		else if (n_struct instanceof ConcurrentMap)
 			DataStruct = (ConcurrentMap) n_struct;
 		
@@ -66,7 +66,7 @@ public class Worker implements Runnable{
 					Read(ini_pos, fin_pos);
 				}
 				else {
-					int pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()))
+					int pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
 					Write("conteudo", pos);
@@ -87,7 +87,9 @@ public class Worker implements Runnable{
 	}
 	
 	public void Write(String x, int pos) {
-		//TODO write operation on the specific structure
+		//write operation on the specific structure
+		
+		((CopyOnWriteArrayList) DataStruct).set(pos, x);
 		num_write++;
 	}
 	
@@ -96,5 +98,17 @@ public class Worker implements Runnable{
 		System.out.println("");
 		System.out.println("Number of read operations: " +num_read);
 		System.out.println("Number of write operations: " +num_write);
+	}
+	
+	public void Show() {
+		
+		if (DataStruct instanceof CopyOnWriteArrayList) {
+			
+			System.out.println("\n=====Data Structure=====");
+			for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
+				System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
+			}
+			System.out.println();
+		}
 	}
 }
