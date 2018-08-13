@@ -2,6 +2,7 @@ package concurrent_data;
 
 import java.util.concurrent.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 
 public class Worker implements Runnable{
@@ -10,6 +11,8 @@ public class Worker implements Runnable{
 	
 	private final Object DataStruct;
 	private final Random rand;
+	
+	private Iterator<String> iterator;
 		
 	private int num_read = 0;
 	private int num_write = 0;
@@ -48,20 +51,17 @@ public class Worker implements Runnable{
 
 				if (random < Integer.parseInt(Config.get("READ(%):").toString())) {
 					// nextInt(MAX_VALUE) + MIN_VALUE
-
-					int ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+					
+					int ini_pos, fin_pos;
+					
+					do {
+						ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
 
-					int fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
+						fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-
-					while (fin_pos < ini_pos) {
-						ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-
-						fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()))
-								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-					}
+					
+					} while (fin_pos < ini_pos);
 
 					Read(ini_pos, fin_pos);
 				}
@@ -77,19 +77,57 @@ public class Worker implements Runnable{
 		}
 		catch (InterruptedException e) {
 			
-			System.out.println("Exception: " +e);
+			System.out.println("Write Exception: " +e);
+			//Thread.currentThread().interrupt();
 		}
 	}
 	
 	public void Read(int pos, int f_pos) {
 		//TODO read operation on the specific structure
+		
+		try {
+			
+			//creating an iterator creates an immutable snapshot of the data
+			//in the list at the time iterator() was called
+			if (DataStruct instanceof CopyOnWriteArrayList) {
+
+				iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+				//idk if its possible to lock a specific memory region, because
+				//when iterator() is called it snapshots the entire data structure
+			}
+			else if (DataStruct instanceof ConcurrentMap) {
+				
+				((ConcurrentMap) DataStruct).get(pos);
+			}
+			else if (DataStruct instanceof BlockingQueue) {
+				//since WRITE just adds a single element, READS takes a single
+				//one and blocks if not avaiable
+
+				((BlockingQueue) DataStruct).take();
+			}
+		}
+		catch (InterruptedException e) {
+			
+			System.out.println("Read Exception: " +e);
+			//Thread.currentThread().interrupt();
+		}
+		
 		num_read++;
 	}
 	
-	public void Write(String x, int pos) {
+	public void Write(String x, int pos) throws InterruptedException {
 		//write operation on the specific structure
 		
-		((CopyOnWriteArrayList) DataStruct).set(pos, x);
+		if (DataStruct instanceof CopyOnWriteArrayList) {
+			((CopyOnWriteArrayList) DataStruct).set(pos, x);
+		}
+		else if (DataStruct instanceof ConcurrentMap) {
+			((ConcurrentMap) DataStruct).put(pos, x);
+		}
+		else if (DataStruct instanceof BlockingQueue) {
+			((BlockingQueue) DataStruct).add(x);
+		}
+		
 		num_write++;
 	}
 	
@@ -109,6 +147,17 @@ public class Worker implements Runnable{
 				System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
 			}
 			System.out.println();
+		}
+		else if (DataStruct instanceof ConcurrentMap) {
+			
+			System.out.println("Data Vector: ");
+			for (Object key : ((ConcurrentMap) DataStruct).keySet()) {
+				System.out.println("["+key+"] " + ((ConcurrentMap) DataStruct).get(key));
+			}
+		}
+		else if (DataStruct instanceof BlockingQueue) {
+			//how to check state of the struct if reading takes out
+			//head element?
 		}
 	}
 }

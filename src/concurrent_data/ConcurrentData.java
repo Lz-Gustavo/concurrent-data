@@ -13,11 +13,7 @@ public class ConcurrentData {
 	
 	//IDEA: use an unique object pointer to reference a single datastruct, 
 	//choosen from config param.
-	private static Object DataStruct;	
-	
-//	private BlockingQueue Queue = null;
-//	private ConcurrentMap Map = null;
-//	private CopyOnWriteArrayList List = null;
+	private static Object DataStruct;
 	
 	public static HashMap ConfigParam(File config) {
 		// extract info from config file
@@ -38,6 +34,7 @@ public class ConcurrentData {
 	}
 	
 	public static void FillStruct(HashMap config) {
+		//populates data structure with spaces
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
@@ -45,18 +42,24 @@ public class ConcurrentData {
 				((CopyOnWriteArrayList) DataStruct).add(" ");
 			}
 		}
+		else if (DataStruct instanceof ConcurrentMap) {
+			
+			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+				((ConcurrentMap) DataStruct).put(i, " ");
+			}
+		}
 	}
 	
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 		
-//		if (config_param.get("DATA:").equals("0")) {
-//			DataStruct = new BlockingQueue();
-//		}
-//		else if (config_param.get("DATA:").equals("1")) {
-//			DataStruct = new ConcurrentMap();
-//		}
-		if (config_param.get("DATA:").equals("2")) {
+		if (config_param.get("DATA:").equals("0")) {
+			DataStruct = new LinkedBlockingQueue(Integer.parseInt(config_param.get("TAM:").toString()));
+		}
+		else if (config_param.get("DATA:").equals("1")) {
+			DataStruct = new ConcurrentHashMap();
+		}
+		else if (config_param.get("DATA:").equals("2")) {
 			DataStruct = new CopyOnWriteArrayList();
 		}
 		
