@@ -17,6 +17,7 @@ public class Worker implements Runnable{
 		
 	private int num_read = 0;
 	private int num_write = 0;
+	private int num_remove = 0;
 		
 	public Worker(Object n_struct) {
 		
@@ -31,9 +32,6 @@ public class Worker implements Runnable{
 		else if (n_struct instanceof ArrayList)
 			DataStruct = (ArrayList) n_struct;
 		
-		else if (n_struct instanceof BlockingQueue)
-			DataStruct = (BlockingQueue) n_struct;
-		
 		else
 			DataStruct = null;
 	}
@@ -45,21 +43,31 @@ public class Worker implements Runnable{
 	@Override
 	public void run() {
 		// dispatch random operation using config file param.
-		System.out.println("Worker Running!");
+		if (Config.get("LOG:").toString().equals("1"))
+			System.out.println("Worker Running!");
 		
 		// TODO check latency between operations dispatch-finish executing
 		// and heap memory in-use by each simulation
 		
 		try {
+			int read_perc = Integer.parseInt(Config.get("READ(%):").toString());
+			int write_perc = Integer.parseInt(Config.get("WRITE(%):").toString());
+			int remove_perc = Integer.parseInt(Config.get("REMOVE(%):").toString());
+			
+			if ((read_perc + write_perc + remove_perc) > 100) {
+				System.out.println("Percentage values out of range.");
+				return;
+			}
+			
+			int ini_pos, fin_pos, random, pos;
 			int n_ops = Integer.parseInt(Config.get("OPS:").toString());
+			
 			for (int i = 0; i < n_ops; i++) {
 
-				int random = rand.nextInt(100);
+				random = rand.nextInt(100);
 
-				if (random < Integer.parseInt(Config.get("READ(%):").toString())) {
+				if  (random < read_perc) {
 					// nextInt(MAX_VALUE) + MIN_VALUE
-					
-					int ini_pos, fin_pos;
 					
 					do {
 						ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
@@ -72,11 +80,15 @@ public class Worker implements Runnable{
 
 					Read(ini_pos, fin_pos);
 				}
-				else {
-					int pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
+				else if (random < (write_perc + read_perc)) {
+					pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
 					Write("conteudo", pos);
+				}
+				else {
+					pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
+					Remove(pos);
 				}
 				
 				Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
@@ -85,45 +97,32 @@ public class Worker implements Runnable{
 		catch (InterruptedException e) {
 			
 			System.out.println("Write Exception: " +e);
-			//Thread.currentThread().interrupt();
+			Thread.currentThread().interrupt();
 		}
 	}
 	
 	public void Read(int pos, int f_pos) {
 		
-		try {
-			//creating an iterator creates an immutable snapshot of the data
-			//in the list at the time iterator() was called
-			if (DataStruct instanceof CopyOnWriteArrayList) {
+		//creating an iterator creates an immutable snapshot of the data
+		//in the list at the time iterator() was called
+		if (DataStruct instanceof CopyOnWriteArrayList) {
 
-				iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
-				//idk if its possible to lock a specific memory region, because
-				//when iterator() is called it snapshots the entire data structure
-			}
-			else if (DataStruct instanceof ConcurrentMap) {
-				
-				((ConcurrentMap) DataStruct).get(pos);
-			}
-			else if (DataStruct instanceof ArrayList) {
-				
-				synchronized(DataStruct) {
-					iterator = ((ArrayList) DataStruct).iterator();
-				}
-			}
-			else if (DataStruct instanceof BlockingQueue) {
-				//since WRITE just adds a single element, READS takes a single
-				//one and blocks if not avaiable
+			iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+			//idk if its possible to lock a specific memory region, because
+			//when iterator() is called it snapshots the entire data structure
+		}
+		else if (DataStruct instanceof ConcurrentMap) {
 
-				((BlockingQueue) DataStruct).take();
+			((ConcurrentMap) DataStruct).get(pos);
+		}
+		else if (DataStruct instanceof ArrayList) {
+
+			synchronized(DataStruct) {
+				iterator = ((ArrayList) DataStruct).iterator();
 			}
 		}
-		catch (InterruptedException e) {
-			
-			System.out.println("Read Exception: " +e);
-			//Thread.currentThread().interrupt();
-		}
-		
-		num_read++;
+
+		++num_read;
 	}
 	
 	public void Write(String x, int pos) throws InterruptedException {
@@ -141,11 +140,27 @@ public class Worker implements Runnable{
 				((ArrayList) DataStruct).set(pos, x);
 			}
 		}
-		else if (DataStruct instanceof BlockingQueue) {
-			((BlockingQueue) DataStruct).add(x);
+		
+		++num_write;
+	}
+	
+	public void Remove(int pos) {
+		
+		if (DataStruct instanceof CopyOnWriteArrayList) {
+			((CopyOnWriteArrayList) DataStruct).set(pos, " ");
+		}
+		else if (DataStruct instanceof ConcurrentMap) {
+			((ConcurrentMap) DataStruct).remove(pos);
+			
+		}
+		else if (DataStruct instanceof ArrayList) {
+			
+			synchronized(DataStruct) {
+				((ArrayList) DataStruct).set(pos, " ");
+			}
 		}
 		
-		num_write++;
+		++num_remove;
 	}
 	
 	public void getStatus() {
@@ -153,6 +168,7 @@ public class Worker implements Runnable{
 		System.out.println("");
 		System.out.println("Number of read operations: " +num_read);
 		System.out.println("Number of write operations: " +num_write);
+		System.out.println("Number of remove operations: "+num_remove);
 	}
 	
 	public void Show() {
@@ -174,15 +190,14 @@ public class Worker implements Runnable{
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
-			System.out.println("\n=====ArrayList Structure=====");
-			for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
-				System.out.println("["+i+"] " +((ArrayList) DataStruct).get(i));
+			synchronized (DataStruct) {
+				
+				System.out.println("\n=====ArrayList Structure=====");
+				for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
+					System.out.println("["+i+"] " +((ArrayList) DataStruct).get(i));
+				}
+				System.out.println();
 			}
-			System.out.println();
-		}
-		else if (DataStruct instanceof BlockingQueue) {
-			//how to check state of the struct if reading takes out
-			//head element?
 		}
 	}
 }

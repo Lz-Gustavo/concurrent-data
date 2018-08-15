@@ -50,12 +50,11 @@ public class ConcurrentData {
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((ArrayList) DataStruct).add(" ");
+			synchronized(DataStruct) {
+				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+					((ArrayList) DataStruct).add(" ");
+				}
 			}
-		}
-		else if (DataStruct instanceof BlockingQueue) {
-			//is it necessary to fill a queue?
 		}
 	}
 	
@@ -68,15 +67,11 @@ public class ConcurrentData {
 		else if (config_param.get("DATA:").equals("1")) {
 			DataStruct = new ConcurrentHashMap();
 		}
-		else if (config_param.get("DATA:").equals("2")) {
+		else {
 			DataStruct = new ArrayList();
 		}
-		else if (config_param.get("DATA:").equals("3")) {
-			DataStruct = new LinkedBlockingQueue(Integer.parseInt(config_param.get("TAM:").toString()));
-		}
 		
-		int i;
-		int number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
+		int i, number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
 		FillStruct(config_param);
 		
 		for (i = 0; i < number_w; i++) {
@@ -110,9 +105,11 @@ public class ConcurrentData {
 		File config_file = new File("/home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt");
 		HashMap data = ConfigParam(config_file);
 		
-		System.out.println("Data Vector: ");
-		for (Object key : data.keySet()) {
-			System.out.println(key + " " + data.get(key));
+		if (data.get("LOG:").toString().equals("1")) {
+			System.out.println("Data Vector: ");
+			for (Object key : data.keySet()) {
+				System.out.println(key + " " + data.get(key));
+			}
 		}
 		
 		workers = new ArrayList<>();
