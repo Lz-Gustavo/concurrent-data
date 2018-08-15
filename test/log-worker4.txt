@@ -1,0 +1,10 @@
+Read 19, 26 - 1457
+Write 15 - 2326
+Write 13 - 3142
+Read 20, 25 - 960
+Read 0, 25 - 823
+Write 8 - 2130
+Read 4, 13 - 808
+Remove 26 - 6753
+Remove 4 - 4899
+Read 24, 32 - 875

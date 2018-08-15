@@ -1,7 +1,10 @@
 package concurrent_data;
 
-import java.util.*;
 import java.io.*;
+import java.nio.file.*;
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.*;
 
 public class ConcurrentData {
@@ -105,19 +108,44 @@ public class ConcurrentData {
 		File config_file = new File("/home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt");
 		HashMap data = ConfigParam(config_file);
 		
-		if (data.get("LOG:").toString().equals("1")) {
-			System.out.println("Data Vector: ");
-			for (Object key : data.keySet()) {
-				System.out.println(key + " " + data.get(key));
-			}
-		}
-		
 		workers = new ArrayList<>();
 		GenerateWorkers(data);
 		
 		if (data.get("LOG:").toString().equals("1")) {
-			for (int i = 0; i < workers.size(); i++)
+			
+			System.out.println("Data Vector: ");
+			for (Object key : data.keySet()) {
+				System.out.println(key + " " + data.get(key));
+			}
+
+			for (int i = 0; i < workers.size(); i++) {
 				workers.get(i).getStatus();
+
+				Path file = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-worker"+i+".txt");
+				try {
+					// Create the empty file with default permissions, etc.
+					Files.createFile(file);
+					
+					ArrayList log_ops = workers.get(i).getLog();
+					ArrayList latency = workers.get(i).getLatency();
+					
+					String aux_buff = new String();
+					
+					for (int j = 0; j < log_ops.size(); j++) {
+						
+						aux_buff += log_ops.get(j) + " - " + latency.get(j) + "\n";
+					}
+					
+					byte[] buffer = aux_buff.getBytes();
+					Files.write(file, buffer);
+				}
+				catch (FileAlreadyExistsException x) {
+					System.err.format("file named %s" +" already exists %s%n", file, x);
+				}
+				catch (IOException x) {	
+					System.err.format("createFile error: %s%n", x);
+				}
+			}
 			
 			//all workers operate on the same data structure reference
 			workers.get(0).Show();

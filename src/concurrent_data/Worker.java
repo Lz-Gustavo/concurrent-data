@@ -18,10 +18,15 @@ public class Worker implements Runnable{
 	private int num_read = 0;
 	private int num_write = 0;
 	private int num_remove = 0;
+	
+	private ArrayList<String> log_operations;
+	private ArrayList<Long> latency;
 		
 	public Worker(Object n_struct) {
 		
 		rand = new Random();
+		latency = new ArrayList();
+		log_operations = new ArrayList();
 		
 		if (n_struct instanceof CopyOnWriteArrayList)
 			DataStruct = (CopyOnWriteArrayList) n_struct;
@@ -77,18 +82,47 @@ public class Worker implements Runnable{
 								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
 					
 					} while (fin_pos < ini_pos);
-
-					Read(ini_pos, fin_pos);
+					
+					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))){
+						
+						//since each worker has its own log, its not a critical region
+						//so we dont need to lock access through a semaphore
+						log_operations.add("Read "+ini_pos+", "+fin_pos);
+						long start_time = System.nanoTime();
+						Read(ini_pos, fin_pos);
+						long end_time = System.nanoTime();
+						latency.add((end_time - start_time));
+					}
+					else
+						Read(ini_pos, fin_pos);
 				}
 				else if (random < (write_perc + read_perc)) {
 					pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
-					Write("conteudo", pos);
+					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))){
+						
+						log_operations.add("Write "+pos);
+						long start_time = System.nanoTime();
+						Write("conteudo", pos);
+						long end_time = System.nanoTime();
+						latency.add((end_time - start_time));
+					}
+					else
+						Write("conteudo", pos);
 				}
 				else {
 					pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
-					Remove(pos);
+					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))) {
+						
+						log_operations.add("Remove "+pos);
+						long start_time = System.nanoTime();
+						Remove(pos);
+						long end_time = System.nanoTime();
+						latency.add((end_time - start_time));
+					}
+					else
+						Remove(pos);
 				}
 				
 				Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
@@ -199,5 +233,13 @@ public class Worker implements Runnable{
 				System.out.println();
 			}
 		}
+	}
+	
+	public ArrayList getLog() {
+		return log_operations;
+	}
+	
+	public ArrayList getLatency() {
+		return latency;
 	}
 }
