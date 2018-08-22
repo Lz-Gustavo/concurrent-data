@@ -1,0 +1,8 @@
+worker0 - Remove 20 - 3387
+worker1 - Remove 23 - 4646
+worker1 - Remove 32 - 1072
+worker1 - Remove 13 - 3441
+worker1 - Remove 19 - 1192
+worker2 - Remove 7 - 994
+worker4 - Remove 31 - 1513
+worker4 - Remove 3 - 4064

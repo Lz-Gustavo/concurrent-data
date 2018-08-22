@@ -1,0 +1,10 @@
+Write 27 - 2286629
+Read 31, 33 - 988
+Write 26 - 2689
+Read 5, 32 - 1403
+Write 8 - 704
+Write 18 - 774
+Read 13, 24 - 679
+Write 38 - 3082
+Read 15, 33 - 619
+Read 6, 29 - 681

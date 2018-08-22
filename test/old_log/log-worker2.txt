@@ -1,0 +1,10 @@
+Read 16, 27 - 9914
+Remove 34 - 2669
+Write 6 - 915
+Remove 7 - 5180
+Read 37, 38 - 621
+Read 11, 24 - 695
+Write 26 - 985
+Read 14, 21 - 681
+Read 21, 37 - 631
+Write 16 - 2735

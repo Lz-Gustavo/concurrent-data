@@ -1,0 +1,10 @@
+Read 31, 31 - 1973
+Write 31 - 2817
+Remove 13 - 6715
+Read 21, 22 - 871
+Write 33 - 3072
+Read 22, 25 - 736
+Write 32 - 976
+Read 7, 23 - 809
+Write 27 - 1106
+Read 11, 21 - 964
