@@ -64,7 +64,7 @@ public class Worker implements Runnable{
 				return;
 			}
 			
-			int ini_pos, fin_pos, random, pos;
+			int random, rand_pos;
 			int n_ops = Integer.parseInt(Config.get("OPS:").toString());
 			
 			for (int i = 0; i < n_ops; i++) {
@@ -74,55 +74,49 @@ public class Worker implements Runnable{
 				if  (random < read_perc) {
 					// nextInt(MAX_VALUE) + MIN_VALUE
 					
-					do {
-						ini_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
+					rand_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-
-						fin_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
-								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-					
-					} while (fin_pos < ini_pos);
 					
 					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))){
 						
 						//since each worker has its own log, its not a critical region
 						//so we dont need to lock access through a semaphore
-						log_operations.add("Read "+ini_pos+", "+fin_pos);
+						log_operations.add("Read "+rand_pos);
 						long start_time = System.nanoTime();
-						Read(ini_pos, fin_pos);
+						Read(rand_pos);
 						long end_time = System.nanoTime();
 						latency.add((end_time - start_time));
 					}
 					else
-						Read(ini_pos, fin_pos);
+						Read(rand_pos);
 				}
 				else if (random < (write_perc + read_perc)) {
-					pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
+					rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
 					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))){
 						
-						log_operations.add("Write "+pos);
+						log_operations.add("Write "+rand_pos);
 						long start_time = System.nanoTime();
-						Write("conteudo", pos);
+						Write("conteudo", rand_pos);
 						long end_time = System.nanoTime();
 						latency.add((end_time - start_time));
 					}
 					else
-						Write("conteudo", pos);
+						Write("conteudo", rand_pos);
 				}
 				else {
-					pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
+					rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
 					if ((i%(n_ops/10) == 0) && (Config.get("LOG:").toString().equals("1"))) {
 						
-						log_operations.add("Remove "+pos);
+						log_operations.add("Remove "+rand_pos);
 						long start_time = System.nanoTime();
-						Remove(pos);
+						Remove(rand_pos);
 						long end_time = System.nanoTime();
 						latency.add((end_time - start_time));
 					}
 					else
-						Remove(pos);
+						Remove(rand_pos);
 				}
 				
 				Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
@@ -135,7 +129,7 @@ public class Worker implements Runnable{
 		}
 	}
 	
-	public void Read(int pos, int f_pos) {
+	public void Read(int pos) {
 		
 		//creating an iterator creates an immutable snapshot of the data
 		//in the list at the time iterator() was called

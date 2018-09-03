@@ -1,4 +1,0 @@
-worker1 - Remove 13 - 2469
-worker2 - Remove 22 - 3245
-worker3 - Remove 14 - 7733
-worker4 - Remove 24 - 2544

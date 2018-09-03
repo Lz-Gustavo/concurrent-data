@@ -144,9 +144,9 @@ public class ConcurrentData {
 			}
 		}
 
-		Path file_remove = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-remove.txt");
-		Path file_read = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-read.txt");
-		Path file_write = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-write.txt");
+		Path file_remove = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-remove-"+data.get("WORKERS:").toString()+"t.txt");
+		Path file_read = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-read-"+data.get("WORKERS:").toString()+"t.txt");
+		Path file_write = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-write-"+data.get("WORKERS:").toString()+"t.txt");
 
 		try {
 
@@ -168,11 +168,15 @@ public class ConcurrentData {
 				for (int j = 0; j < log_ops.size(); j++) {
 
 					if (log_ops.get(j).toString().contains("Remove"))
-						aux_remove += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						//aux_remove += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						aux_remove += latency.get(j) + "\n";
+					
 					else if (log_ops.get(j).toString().contains("Read"))
-						aux_read += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						//aux_read += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						aux_read += latency.get(j) + "\n";
 					else
-						aux_write += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						//aux_write += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+						aux_write += latency.get(j) + "\n";
 				}
 
 				Files.write(file_remove, aux_remove.getBytes(), StandardOpenOption.APPEND);
