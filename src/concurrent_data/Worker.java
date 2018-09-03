@@ -142,8 +142,13 @@ public class Worker implements Runnable{
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 
 			iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+			
 			//idk if its possible to lock a specific memory region, because
 			//when iterator() is called it snapshots the entire data structure
+			//thats why the two implementations of array list used in this example
+			//use the iterator declaration as the only snapshot capture alternative,
+			//but have different latency in run-time overhead since CoW capture is
+			//much more costly.
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 
