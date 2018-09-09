@@ -60,15 +60,14 @@ public class Worker implements Runnable{
 			int remove_perc = Integer.parseInt(Config.get("REMOVE(%):").toString());
 			
 			if ((read_perc + write_perc + remove_perc) > 100) {
-				System.out.println("Percentage values out of range.");
-				return;
+				throw new java.lang.RuntimeException("Percentage values out of range.");
 			}
 			
 			int random, rand_pos;
 			int total_ops = Integer.parseInt(Config.get("OPS:").toString());
 			int n_ops = total_ops/Integer.parseInt(Config.get("WORKERS:").toString());
 			
-			System.out.println("execute: "+n_ops);
+			//System.out.println("Execute "+n_ops+" operations.");
 			
 			for (int i = 0; i < n_ops; i++) {
 
@@ -80,7 +79,7 @@ public class Worker implements Runnable{
 					rand_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
 					
-					if (i%(total_ops/10) == 0) {
+					if (i%100 == 0) {
 						
 						//since each worker has its own log, its not a critical region
 						//so we dont need to lock access through a semaphore
@@ -97,7 +96,7 @@ public class Worker implements Runnable{
 					rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
-					if (i%(total_ops/10) == 0) {
+					if (i%100 == 0) {
 						
 						log_operations.add("Write "+rand_pos);
 						long start_time = System.nanoTime();
@@ -110,7 +109,7 @@ public class Worker implements Runnable{
 				}
 				else {
 					rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
-					if (i%(total_ops/10) == 0) {
+					if (i%100 == 0) {
 						
 						log_operations.add("Remove "+rand_pos);
 						long start_time = System.nanoTime();
@@ -129,6 +128,10 @@ public class Worker implements Runnable{
 			
 			System.out.println("Write Exception: " +e);
 			Thread.currentThread().interrupt();
+		}
+		catch (Exception e) {
+			
+			System.out.println("Exception: "+e);
 		}
 	}
 	

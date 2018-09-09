@@ -129,9 +129,20 @@ public class ConcurrentData {
 		try {
 
 			// create the empty file with default permissions, etc.
-			Files.createFile(file_remove);
-			Files.createFile(file_read);
-			Files.createFile(file_write);
+			if (!"0".equals(data.get("REMOVE(%):").toString())) {
+				Files.deleteIfExists(file_remove);
+				Files.createFile(file_remove);
+			}
+			
+			if (!"0".equals(data.get("READ(%):").toString())) {
+				Files.deleteIfExists(file_read);
+				Files.createFile(file_read);
+			}
+			
+			if (!"0".equals(data.get("WRITE(%):").toString())) {
+				Files.deleteIfExists(file_write);
+				Files.createFile(file_write);
+			}
 
 			for (int i = 0; i < workers.size(); i++) {
 				
@@ -159,9 +170,14 @@ public class ConcurrentData {
 						aux_write += latency.get(j) + "\n";
 				}
 
-				Files.write(file_remove, aux_remove.getBytes(), StandardOpenOption.APPEND);
-				Files.write(file_read, aux_read.getBytes(), StandardOpenOption.APPEND);
-				Files.write(file_write, aux_write.getBytes(), StandardOpenOption.APPEND);
+				if (!"0".equals(data.get("REMOVE(%):").toString()))
+					Files.write(file_remove, aux_remove.getBytes(), StandardOpenOption.APPEND);
+				
+				if (!"0".equals(data.get("READ(%):").toString()))
+					Files.write(file_read, aux_read.getBytes(), StandardOpenOption.APPEND);
+				
+				if (!"0".equals(data.get("WRITE(%):").toString()))
+					Files.write(file_write, aux_write.getBytes(), StandardOpenOption.APPEND);
 			}
 		}
 		catch (FileAlreadyExistsException x) {
