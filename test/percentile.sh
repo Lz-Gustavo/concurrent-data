@@ -34,7 +34,7 @@ ordered=$(sort -n "${input_file}" > tmp_ordered.txt)
 count=$(((total * nth_percentile) / 100))
 if [ $# -eq 3 ]
 	then
-		head -n $count "tmp_ordered.txt" | tail -n 1 > $output
+		head -n $count "tmp_ordered.txt" | tail -n 1 >> $output
 	else	
 		head -n $count "tmp_ordered.txt" | tail -n 1
 fi		
