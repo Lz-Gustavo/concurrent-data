@@ -69,59 +69,89 @@ public class Worker implements Runnable{
 			
 			//System.out.println("Execute "+n_ops+" operations.");
 			
-			for (int i = 0; i < n_ops; i++) {
-
-				random = rand.nextInt(100);
-
-				if  (random < read_perc) {
-					// nextInt(MAX_VALUE) + MIN_VALUE
-					
-					rand_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
-								+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
-					
-					if (i%100 == 0) {
-						
-						//since each worker has its own log, its not a critical region
-						//so we dont need to lock access through a semaphore
-						log_operations.add("Read "+rand_pos);
-						long start_time = System.nanoTime();
-						Read(rand_pos);
-						long end_time = System.nanoTime();
-						latency.add((end_time - start_time));
-					}
-					else
-						Read(rand_pos);
-				}
-				else if (random < (write_perc + read_perc)) {
-					rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
-								+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
-
-					if (i%100 == 0) {
-						
-						log_operations.add("Write "+rand_pos);
-						long start_time = System.nanoTime();
-						Write("conteudo", rand_pos);
-						long end_time = System.nanoTime();
-						latency.add((end_time - start_time));
-					}
-					else
-						Write("conteudo", rand_pos);
-				}
-				else {
-					rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
-					if (i%100 == 0) {
-						
-						log_operations.add("Remove "+rand_pos);
-						long start_time = System.nanoTime();
-						Remove(rand_pos);
-						long end_time = System.nanoTime();
-						latency.add((end_time - start_time));
-					}
-					else
-						Remove(rand_pos);
-				}
+			if ((Integer.parseInt(Config.get("SUPERVISOR:").toString())) > 0) {
 				
-				Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
+				for (;;) {
+
+					random = rand.nextInt(100);
+
+					if  (random < read_perc) {
+
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
+									+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+
+						Read(rand_pos);
+					}
+					else if (random < (write_perc + read_perc)) {
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
+									+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
+
+						Write("conteudo", rand_pos);
+					}
+					else {
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
+						
+						Remove(rand_pos);
+					}
+
+					Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
+				}
+			}
+			else {
+				for (int i = 0; i < n_ops; i++) {
+
+					random = rand.nextInt(100);
+
+					if  (random < read_perc) {
+						// nextInt(MAX_VALUE) + MIN_VALUE
+
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("R_MAX_POS:").toString()) + 1)
+									+ Integer.parseInt(Config.get("R_MIN_POS:").toString());
+
+						if (i%100 == 0) {
+
+							//since each worker has its own log, its not a critical region
+							//so we dont need to lock access through a semaphore
+							log_operations.add("Read "+rand_pos);
+							long start_time = System.nanoTime();
+							Read(rand_pos);
+							long end_time = System.nanoTime();
+							latency.add((end_time - start_time));
+						}
+						else
+							Read(rand_pos);
+					}
+					else if (random < (write_perc + read_perc)) {
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
+									+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
+
+						if (i%100 == 0) {
+
+							log_operations.add("Write "+rand_pos);
+							long start_time = System.nanoTime();
+							Write("conteudo", rand_pos);
+							long end_time = System.nanoTime();
+							latency.add((end_time - start_time));
+						}
+						else
+							Write("conteudo", rand_pos);
+					}
+					else {
+						rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
+						if (i%100 == 0) {
+
+							log_operations.add("Remove "+rand_pos);
+							long start_time = System.nanoTime();
+							Remove(rand_pos);
+							long end_time = System.nanoTime();
+							latency.add((end_time - start_time));
+						}
+						else
+							Remove(rand_pos);
+					}
+
+					Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
+				}
 			}
 		}
 		catch (InterruptedException e) {

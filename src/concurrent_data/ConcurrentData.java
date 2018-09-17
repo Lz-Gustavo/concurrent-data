@@ -87,15 +87,34 @@ public class ConcurrentData {
 		}
 
 		try {
+			
 			workers_t = new Thread[number_w];
 			
 			for (i = 0; i < number_w; i++) {
 				workers_t[i] = new Thread(workers.get(i));
 				workers_t[i].start();
+			
 			}
 			
-			for (i = 0; i < number_w; i++) {
-				workers_t[i].join();
+			if (Integer.parseInt(config_param.get("SUPERVISOR:").toString()) > 0) {
+				
+				Timer temp = new Timer(Integer.parseInt(config_param.get("SUPERVISOR:").toString()));
+				Thread time = new Thread(temp);
+				time.start();
+				
+				time.join();
+				System.out.println("Worker finished!");
+			
+				for (i = 0; i < number_w; i++) {
+					workers_t[i].interrupt();
+				}
+			}
+			
+			else {
+	
+				for (i = 0; i < number_w; i++) {
+					workers_t[i].join();
+				}
 			}
 		}
 		catch (InterruptedException e) {
@@ -151,25 +170,36 @@ public class ConcurrentData {
 				
 				ArrayList log_ops = workers.get(i).getLog();
 				ArrayList latency = workers.get(i).getLatency();
+				ArrayList num = workers.get(i).getNum();
 
 				String aux_remove = new String();
 				String aux_read = new String();
 				String aux_write = new String();
-
-				for (int j = 0; j < log_ops.size(); j++) {
-
-					if (log_ops.get(j).toString().contains("Remove"))
-						//aux_remove += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
-						aux_remove += latency.get(j) + "\n";
+				
+				if (Integer.parseInt(data.get("SUPERVISOR:").toString()) > 0) {
 					
-					else if (log_ops.get(j).toString().contains("Read"))
-						//aux_read += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
-						aux_read += latency.get(j) + "\n";
-					else
-						//aux_write += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
-						aux_write += latency.get(j) + "\n";
+					aux_read += num.get(0) + "\n";
+					aux_remove += num.get(1) + "\n";
+					aux_write += num.get(2) + "\n";
 				}
+				
+				else {
+					
+					for (int j = 0; j < log_ops.size(); j++) {
 
+						if (log_ops.get(j).toString().contains("Remove"))
+							//aux_remove += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+							aux_remove += latency.get(j) + "\n";
+
+						else if (log_ops.get(j).toString().contains("Read"))
+							//aux_read += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+							aux_read += latency.get(j) + "\n";
+						else
+							//aux_write += "worker" + i + " - " + log_ops.get(j) + " - " + latency.get(j) + "\n";
+							aux_write += latency.get(j) + "\n";
+					}
+				}
+				
 				if (!"0".equals(data.get("REMOVE(%):").toString()))
 					Files.write(file_remove, aux_remove.getBytes(), StandardOpenOption.APPEND);
 				
