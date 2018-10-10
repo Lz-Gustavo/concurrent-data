@@ -184,13 +184,16 @@ public class Worker implements Runnable{
 
 			((ConcurrentMap) DataStruct).get(pos);
 		}
-		else if (DataStruct instanceof ArrayList) {
+		else if (Config.get("DATA:").toString().equals("3")) {
 
+			iterator = ((ArrayList) DataStruct).iterator();
+		}
+		else if (Config.get("DATA:").toString().equals("4")) {
+			
 			synchronized(DataStruct) {
 				iterator = ((ArrayList) DataStruct).iterator();
 			}
 		}
-
 		++num_read;
 	}
 	
@@ -203,7 +206,10 @@ public class Worker implements Runnable{
 		else if (DataStruct instanceof ConcurrentMap) {
 			((ConcurrentMap) DataStruct).put(pos, x);
 		}
-		else if (DataStruct instanceof ArrayList) {
+		else if (Config.get("DATA:").toString().equals("3")) {	
+			((ArrayList) DataStruct).set(pos, x);
+		}
+		else if (Config.get("DATA:").toString().equals("4")) {
 			
 			synchronized(DataStruct) {
 				((ArrayList) DataStruct).set(pos, x);
@@ -222,7 +228,10 @@ public class Worker implements Runnable{
 			((ConcurrentMap) DataStruct).remove(pos);
 			
 		}
-		else if (DataStruct instanceof ArrayList) {
+		else if (Config.get("DATA:").toString().equals("3")) {
+			((ArrayList) DataStruct).set(pos, " ");
+		}
+		else if (Config.get("DATA:").toString().equals("4")) {
 			
 			synchronized(DataStruct) {
 				((ArrayList) DataStruct).set(pos, " ");

@@ -37,7 +37,8 @@ public class ConcurrentData {
 	}
 	
 	public static void FillStruct(HashMap config) {
-		//populates data structure with spaces
+		//populates data structure with spaces, it can be syncronized for every test case of array
+		//list since its not going to be executed currently with any other structure method
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
@@ -70,10 +71,13 @@ public class ConcurrentData {
 		else if (config_param.get("DATA:").equals("1")) {
 			DataStruct = new ConcurrentHashMap();
 		}
+		else if (config_param.get("DATA:").equals("2")) {
+			// TODO: implement here the new added datastruct
+		}
 		else {
 			DataStruct = new ArrayList();
 		}
-		
+	
 		int i, number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
 		FillStruct(config_param);
 		
