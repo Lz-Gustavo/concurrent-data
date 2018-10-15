@@ -11,6 +11,7 @@ public class Worker implements Runnable{
 	private HashMap Config;
 	
 	private final Object DataStruct;
+	private int DataS;
 	private final Random rand;
 	
 	private Iterator<String> iterator;
@@ -43,6 +44,7 @@ public class Worker implements Runnable{
 	
 	public void LoadConfig(HashMap config) {
 		Config = config;
+		DataS = Integer.parseInt(Config.get("DATA:").toString());
 	}
 	
 	@Override
@@ -58,6 +60,7 @@ public class Worker implements Runnable{
 			int read_perc = Integer.parseInt(Config.get("READ(%):").toString());
 			int write_perc = Integer.parseInt(Config.get("WRITE(%):").toString());
 			int remove_perc = Integer.parseInt(Config.get("REMOVE(%):").toString());
+			int t_time = Integer.parseInt(Config.get("T_TIME(msec):").toString());
 			
 			if ((read_perc + write_perc + remove_perc) > 100) {
 				throw new java.lang.RuntimeException("Percentage values out of range.");
@@ -94,7 +97,8 @@ public class Worker implements Runnable{
 						Remove(rand_pos);
 					}
 
-					Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
+					if (t_time > 0)
+						Thread.sleep(t_time);
 				}
 			}
 			else {
@@ -150,7 +154,8 @@ public class Worker implements Runnable{
 							Remove(rand_pos);
 					}
 
-					Thread.sleep(Integer.parseInt(Config.get("T_TIME(msec):").toString()));
+					if (t_time > 0)
+						Thread.sleep(t_time);
 				}
 			}
 		}
@@ -169,51 +174,51 @@ public class Worker implements Runnable{
 		
 		//creating an iterator creates an immutable snapshot of the data
 		//in the list at the time iterator() was called
-		if (DataStruct instanceof CopyOnWriteArrayList) {
-
-			iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
-			
-			//idk if its possible to lock a specific memory region, because
-			//when iterator() is called it snapshots the entire data structure
-			//thats why the two implementations of array list used in this example
-			//use the iterator declaration as the only snapshot capture alternative,
-			//but have different latency in run-time overhead since CoW capture is
-			//much more costly.
-		}
-		else if (DataStruct instanceof ConcurrentMap) {
-
-			((ConcurrentMap) DataStruct).get(pos);
-		}
-		else if (Config.get("DATA:").toString().equals("3")) {
-
-			iterator = ((ArrayList) DataStruct).iterator();
-		}
-		else if (Config.get("DATA:").toString().equals("4")) {
-			
-			synchronized(DataStruct) {
-				iterator = ((ArrayList) DataStruct).iterator();
-			}
+		switch (DataS) {
+			case 0:
+				iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+				
+				//idk if its possible to lock a specific memory region, because
+				//when iterator() is called it snapshots the entire data structure
+				//thats why the two implementations of array list used in this example
+				//use the iterator declaration as the only snapshot capture alternative,
+				//but have different latency in run-time overhead since CoW capture is
+				//much more costly.
+				break;
+			case 1:
+				((ConcurrentMap) DataStruct).get(pos);
+				break;
+			case 3:
+				((ArrayList) DataStruct).get(pos);
+				break;
+			case 4:
+				synchronized(DataStruct) {
+					((ArrayList) DataStruct).get(pos);
+				}	break;
+			default:
+				break;
 		}
 		++num_read;
 	}
 	
 	public void Write(String x, int pos) throws InterruptedException {
 		//write operation on the specific structure
-		
-		if (DataStruct instanceof CopyOnWriteArrayList) {
-			((CopyOnWriteArrayList) DataStruct).set(pos, x);
-		}
-		else if (DataStruct instanceof ConcurrentMap) {
-			((ConcurrentMap) DataStruct).put(pos, x);
-		}
-		else if (Config.get("DATA:").toString().equals("3")) {	
-			((ArrayList) DataStruct).set(pos, x);
-		}
-		else if (Config.get("DATA:").toString().equals("4")) {
-			
-			synchronized(DataStruct) {
+		switch (DataS) {
+			case 0:
+				((CopyOnWriteArrayList) DataStruct).set(pos, x);
+				break;
+			case 1:
+				((ConcurrentMap) DataStruct).put(pos, x);
+				break;
+			case 3:
 				((ArrayList) DataStruct).set(pos, x);
-			}
+				break;
+			case 4:
+				synchronized(DataStruct) {
+					((ArrayList) DataStruct).set(pos, x);
+				}	break;
+			default:
+				break;
 		}
 		
 		++num_write;
@@ -221,21 +226,22 @@ public class Worker implements Runnable{
 	
 	public void Remove(int pos) {
 		
-		if (DataStruct instanceof CopyOnWriteArrayList) {
-			((CopyOnWriteArrayList) DataStruct).set(pos, " ");
-		}
-		else if (DataStruct instanceof ConcurrentMap) {
-			((ConcurrentMap) DataStruct).remove(pos);
-			
-		}
-		else if (Config.get("DATA:").toString().equals("3")) {
-			((ArrayList) DataStruct).set(pos, " ");
-		}
-		else if (Config.get("DATA:").toString().equals("4")) {
-			
-			synchronized(DataStruct) {
+		switch (DataS) {
+			case 0:
+				((CopyOnWriteArrayList) DataStruct).set(pos, " ");
+				break;
+			case 1:
+				((ConcurrentMap) DataStruct).remove(pos);
+				break;
+			case 3:
 				((ArrayList) DataStruct).set(pos, " ");
-			}
+				break;
+			case 4:
+				synchronized(DataStruct) {
+					((ArrayList) DataStruct).set(pos, " ");
+				}	break;
+			default:
+				break;
 		}
 		
 		++num_remove;

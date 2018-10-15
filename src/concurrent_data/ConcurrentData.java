@@ -237,5 +237,7 @@ public class ConcurrentData {
 				msg = scan.nextLine();
 			} while (!msg.equals(""));
 		}
+		
+		return;
 	}
 }
