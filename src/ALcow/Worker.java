@@ -1,4 +1,4 @@
-package concurrent_data;
+package ALcow;
 
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -11,7 +11,6 @@ public class Worker implements Runnable{
 	private HashMap Config;
 	
 	private final Object DataStruct;
-	private int DataS;
 	private final Random rand;
 	
 	private Iterator<String> iterator;
@@ -44,7 +43,6 @@ public class Worker implements Runnable{
 	
 	public void LoadConfig(HashMap config) {
 		Config = config;
-		DataS = Integer.parseInt(Config.get("DATA:").toString());
 	}
 	
 	@Override
@@ -174,76 +172,29 @@ public class Worker implements Runnable{
 		
 		//creating an iterator creates an immutable snapshot of the data
 		//in the list at the time iterator() was called
-		switch (DataS) {
-			case 0:
-				iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
-				
-				//idk if its possible to lock a specific memory region, because
-				//when iterator() is called it snapshots the entire data structure
-				//thats why the two implementations of array list used in this example
-				//use the iterator declaration as the only snapshot capture alternative,
-				//but have different latency in run-time overhead since CoW capture is
-				//much more costly.
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).get(pos);
-				break;
-			case 3:
-				((ArrayList) DataStruct).get(pos);
-				break;
-			case 4:
-				synchronized(DataStruct) {
-					((ArrayList) DataStruct).get(pos);
-				}	break;
-			default:
-				break;
-		}
+	
+		iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+
+		//idk if its possible to lock a specific memory region, because
+		//when iterator() is called it snapshots the entire data structure
+		//thats why the two implementations of array list used in this example
+		//use the iterator declaration as the only snapshot capture alternative,
+		//but have different latency in run-time overhead since CoW capture is
+		//much more costly.
+		
 		++num_read;
 	}
 	
 	public void Write(String x, int pos) throws InterruptedException {
 		//write operation on the specific structure
-		switch (DataS) {
-			case 0:
-				((CopyOnWriteArrayList) DataStruct).set(pos, x);
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).put(pos, x);
-				break;
-			case 3:
-				((ArrayList) DataStruct).set(pos, x);
-				break;
-			case 4:
-				synchronized(DataStruct) {
-					((ArrayList) DataStruct).set(pos, x);
-				}	break;
-			default:
-				break;
-		}
-		
+	
+		((CopyOnWriteArrayList) DataStruct).set(pos, x);
 		++num_write;
 	}
 	
 	public void Remove(int pos) {
 		
-		switch (DataS) {
-			case 0:
-				((CopyOnWriteArrayList) DataStruct).set(pos, " ");
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).remove(pos);
-				break;
-			case 3:
-				((ArrayList) DataStruct).set(pos, " ");
-				break;
-			case 4:
-				synchronized(DataStruct) {
-					((ArrayList) DataStruct).set(pos, " ");
-				}	break;
-			default:
-				break;
-		}
-		
+		((CopyOnWriteArrayList) DataStruct).set(pos, " ");
 		++num_remove;
 	}
 	
@@ -256,33 +207,13 @@ public class Worker implements Runnable{
 	}
 	
 	public void Show() {
-		
-		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
-			System.out.println("\n=====CoW Array Structure=====");
-			for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
-				System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
-			}
-			System.out.println();
+		System.out.println("\n=====CoW Array Structure=====");
+		for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
+			System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
 		}
-		else if (DataStruct instanceof ConcurrentMap) {
-			
-			System.out.println("\n=====Concurrent Map Structure=====");
-			for (Object key : ((ConcurrentMap) DataStruct).keySet()) {
-				System.out.println("["+key+"] " + ((ConcurrentMap) DataStruct).get(key));
-			}
-		}
-		else if (DataStruct instanceof ArrayList) {
-			
-			synchronized (DataStruct) {
-				
-				System.out.println("\n=====ArrayList Structure=====");
-				for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
-					System.out.println("["+i+"] " +((ArrayList) DataStruct).get(i));
-				}
-				System.out.println();
-			}
-		}
+		System.out.println();
+
 	}
 	
 	public ArrayList getLog() {

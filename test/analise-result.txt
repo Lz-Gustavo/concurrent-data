@@ -1,3 +1,11 @@
+Comparacao de Resultados obtidos em um mesmo ambiente de experimentaçao:
+	* estrutura CoW array list
+	* somente operacoes de write
+	* 1min supervisor
+	* 25 worker threads
+	
+	OBS: mostrado o numero em cada thread inves de soma total, para observar possivel disparidade
+
 -----CASO BASE: versao anterior, sem if no sleep e com verificacao "instanceof..."
 6493549
 6492919
@@ -25,7 +33,7 @@
 6461728
 6479578
 
------CASO 2: troca da verificacao "instanceof" p/ get em hashmap de config
+-----CASO 1: troca da verificacao "instanceof" p/ get em hashmap de config
 5685572
 5538892
 5536686
@@ -79,7 +87,7 @@
 20073415
 22021864
 
------CASO 3: if > 0 no sleep e verificacao por valor de var
+-----CASO 3: if > 0 no sleep e verificacao por valor de var com switch statement
 22698831
 23771866
 23900795
@@ -106,3 +114,34 @@
 23326907
 24364230
 
+-----CASO 4: resultado com codigo separado, unico para cada estrutura
+22516924
+22132088
+22497853
+21532100
+22709784
+22872696
+23017631
+22841414
+24145156
+23767041
+22327120
+22369531
+22494701
+21458579
+22404199
+23601798
+23717492
+22692291
+22013971
+21655426
+22590748
+21059661
+21624023
+24610687
+22623397
+
+CONCLUSAO:
+	* melhor resultado observado em 3, ao manter o mesmo codigo geral e utilizando comparacao de valores de variaveis e com verificacao antes de efetuar sleep;
+	* if (t_time > 0) antes de efetuar sleep aumento o desempenho em termos de numero de vazao (ops/min) em mais de 200%;
+	* estranhamente, busca de valor em hashmap config eh mais custosa do que verificacao de tipo "instanceof....";

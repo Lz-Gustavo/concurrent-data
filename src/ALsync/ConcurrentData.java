@@ -1,4 +1,4 @@
-package concurrent_data;
+package ALsync;
 
 import java.io.*;
 import java.nio.file.*;
@@ -39,25 +39,10 @@ public class ConcurrentData {
 	public static void FillStruct(HashMap config) {
 		//populates data structure with spaces, it can be syncronized for every test case of array
 		//list since its not going to be executed currently with any other structure method
-		
-		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
+		synchronized(DataStruct) {
 			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((CopyOnWriteArrayList) DataStruct).add(" ");
-			}
-		}
-		else if (DataStruct instanceof ConcurrentMap) {
-			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((ConcurrentMap) DataStruct).put(i, " ");
-			}
-		}
-		else if (DataStruct instanceof ArrayList) {
-			
-			synchronized(DataStruct) {
-				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-					((ArrayList) DataStruct).add(" ");
-				}
+				((ArrayList) DataStruct).add(" ");
 			}
 		}
 	}
@@ -65,18 +50,7 @@ public class ConcurrentData {
 	public static void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one
 		
-		if (config_param.get("DATA:").equals("0")) {
-			DataStruct = new CopyOnWriteArrayList();
-		}
-		else if (config_param.get("DATA:").equals("1")) {
-			DataStruct = new ConcurrentHashMap();
-		}
-		else if (config_param.get("DATA:").equals("2")) {
-			// TODO: implement here the new added datastruct
-		}
-		else {
-			DataStruct = new ArrayList();
-		}
+		DataStruct = new ArrayList();
 	
 		int i, number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
 		FillStruct(config_param);
@@ -237,7 +211,5 @@ public class ConcurrentData {
 				msg = scan.nextLine();
 			} while (!msg.equals(""));
 		}
-		
-		return;
 	}
 }
