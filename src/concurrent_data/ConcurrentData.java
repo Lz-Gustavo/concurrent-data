@@ -24,7 +24,7 @@ public class ConcurrentData {
 
 		try {
 			Scanner scn = new Scanner(config);
-
+			
 			while(scn.hasNextLine()) {
 				info.put(scn.next(), scn.next());
 			}
@@ -128,11 +128,14 @@ public class ConcurrentData {
 	
 	public static void main(String[] args) {
 		
-		File config_file = new File("/home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt");
-		HashMap data = ConfigParam(config_file);
+		// /home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt
+		if (args.length == 0) {
+			System.out.println("Insert config file path name as argument");
+			return;
+		}
 		
-		if (args.length == 1)
-			data.put("WORKERS:", args[0]);
+		File config_file = new File(args[0]);
+		HashMap data = ConfigParam(config_file);
 		
 		workers = new ArrayList<>();
 		GenerateWorkers(data);
@@ -145,9 +148,10 @@ public class ConcurrentData {
 			}
 		}
 		
-		Path file_remove = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-remove-"+data.get("WORKERS:").toString()+"t.txt");
-		Path file_read = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-read-"+data.get("WORKERS:").toString()+"t.txt");
-		Path file_write = Paths.get("/home/lzgustavo/NetBeansProjects/concurrent-data/test/log-write-"+data.get("WORKERS:").toString()+"t.txt");
+		// /home/lzgustavo/NetBeansProjects/concurrent-data
+		Path file_remove = Paths.get("./test/log-remove-"+data.get("WORKERS:").toString()+"t.txt");
+		Path file_read = Paths.get("./test/log-read-"+data.get("WORKERS:").toString()+"t.txt");
+		Path file_write = Paths.get("./test/log-write-"+data.get("WORKERS:").toString()+"t.txt");
 
 		try {
 
@@ -238,6 +242,6 @@ public class ConcurrentData {
 			} while (!msg.equals(""));
 		}
 		
-		return;
+		System.exit(0);
 	}
 }
