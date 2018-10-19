@@ -137,6 +137,9 @@ public class ConcurrentData {
 		File config_file = new File(args[0]);
 		HashMap data = ConfigParam(config_file);
 		
+		if (args.length == 2)
+			data.replace("WORKERS:", args[1]);
+
 		workers = new ArrayList<>();
 		GenerateWorkers(data);
 		
