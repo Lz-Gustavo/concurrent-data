@@ -1,6 +1,11 @@
 package concurrent_data;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +27,8 @@ public class Worker implements Runnable{
 	
 	private ArrayList<String> log_operations;
 	private ArrayList<Long> latency;
+	
+	private byte[] write_value;
 		
 	public Worker(Object n_struct) {
 		
@@ -45,6 +52,15 @@ public class Worker implements Runnable{
 	public void LoadConfig(HashMap config) {
 		Config = config;
 		DataS = Integer.parseInt(Config.get("DATA:").toString());
+		int DataLen = Integer.parseInt(Config.get("LEN:").toString());
+
+		//String aux = new String();
+		write_value = new byte[DataLen];
+		for (int i = 0; i < DataLen; i++) {
+			write_value[i] = '-';
+		}
+		//System.out.println("Conteudo: " + Arrays.toString(write_value));
+		//write_value = aux.getBytes();
 	}
 	
 	@Override
@@ -89,7 +105,7 @@ public class Worker implements Runnable{
 						rand_pos = rand.nextInt(Integer.parseInt(Config.get("W_MAX_POS:").toString()) + 1)
 									+ Integer.parseInt(Config.get("W_MIN_POS:").toString());
 
-						Write("conteudo", rand_pos);
+						Write(write_value, rand_pos);
 					}
 					else {
 						rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
@@ -133,12 +149,12 @@ public class Worker implements Runnable{
 
 							log_operations.add("Write "+rand_pos);
 							long start_time = System.nanoTime();
-							Write("conteudo", rand_pos);
+							Write(write_value, rand_pos);
 							long end_time = System.nanoTime();
 							latency.add((end_time - start_time));
 						}
 						else
-							Write("conteudo", rand_pos);
+							Write(write_value, rand_pos);
 					}
 					else {
 						rand_pos = rand.nextInt(Integer.parseInt(Config.get("TAM:").toString()) - 1);
@@ -201,7 +217,7 @@ public class Worker implements Runnable{
 		++num_read;
 	}
 	
-	public void Write(String x, int pos) throws InterruptedException {
+	public void Write(byte[] x, int pos) throws InterruptedException {
 		//write operation on the specific structure
 		switch (DataS) {
 			case 0:
@@ -259,28 +275,48 @@ public class Worker implements Runnable{
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
-			System.out.println("\n=====CoW Array Structure=====");
-			for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
-				System.out.println("["+i+"] " +((CopyOnWriteArrayList) DataStruct).get(i));
+			try {
+				System.out.println("\n=====CoW Array Structure=====");
+				for (int i = 0; i < ((CopyOnWriteArrayList) DataStruct).size(); i++) {
+					System.out.println("["+i+"] " + Arrays.toString(serialize(((CopyOnWriteArrayList) DataStruct).get(i))));
+				}
+
+				System.out.println();
 			}
-			System.out.println();
+			catch (Exception e) {
+
+				System.out.println("Exception: "+e);
+			}
+			
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
-			
-			System.out.println("\n=====Concurrent Map Structure=====");
-			for (Object key : ((ConcurrentMap) DataStruct).keySet()) {
-				System.out.println("["+key+"] " + ((ConcurrentMap) DataStruct).get(key));
+
+			try {
+				System.out.println("\n=====Concurrent Map Structure=====");
+				for (Object key : ((ConcurrentMap) DataStruct).keySet()) {
+					System.out.println("["+key+"] " + Arrays.toString(serialize(((ConcurrentMap) DataStruct).get(key))));
+				}
+			}
+			catch (Exception e) {
+
+				System.out.println("Exception: "+e);
 			}
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
-			synchronized (DataStruct) {
-				
-				System.out.println("\n=====ArrayList Structure=====");
-				for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
-					System.out.println("["+i+"] " +((ArrayList) DataStruct).get(i));
+			try {
+				synchronized (DataStruct) {
+
+					System.out.println("\n=====ArrayList Structure=====");
+					for (int i = 0; i < ((ArrayList) DataStruct).size(); i++) {
+						System.out.println("["+i+"] " + Arrays.toString(serialize(((ArrayList) DataStruct).get(i))));
+					}
+					System.out.println();
 				}
-				System.out.println();
+			}
+			catch (Exception e) {
+
+				System.out.println("Exception: "+e);
 			}
 		}
 	}
@@ -302,5 +338,28 @@ public class Worker implements Runnable{
 		info.add(num_write);
 	
 		return info;
+	}
+	
+	public byte[] serialize(Object obj) throws IOException {
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		ObjectOutput out;
+		byte[] Bytes = null;
+			
+		try {
+			out = new ObjectOutputStream(bos);   
+			out.writeObject(obj);
+			out.flush();
+			Bytes = bos.toByteArray();
+		}
+		catch (Exception e) {
+			
+			System.out.println("Exception: "+e);
+		}
+		finally {	
+			bos.close();
+		}
+		
+		return Bytes;
 	}
 }

@@ -43,39 +43,39 @@ public class ConcurrentData {
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
 			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((CopyOnWriteArrayList) DataStruct).add(" ");
+				((CopyOnWriteArrayList) DataStruct).add(" ".getBytes());
 			}
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 			
 			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((ConcurrentMap) DataStruct).put(i, " ");
+				((ConcurrentMap) DataStruct).put(i, " ".getBytes());
 			}
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
 			synchronized(DataStruct) {
 				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-					((ArrayList) DataStruct).add(" ");
+					((ArrayList) DataStruct).add(" ".getBytes());
 				}
 			}
 		}
 	}
 	
 	public static void GenerateWorkers(HashMap config_param) {
-		// instantiate worker objects and thread each one
-		
+		// instantiate worker objects and thread each one	
+	
 		if (config_param.get("DATA:").equals("0")) {
-			DataStruct = new CopyOnWriteArrayList();
+			DataStruct = new CopyOnWriteArrayList<byte[]>();
 		}
 		else if (config_param.get("DATA:").equals("1")) {
-			DataStruct = new ConcurrentHashMap();
+			DataStruct = new ConcurrentHashMap<String, byte[]>();
 		}
 		else if (config_param.get("DATA:").equals("2")) {
 			// TODO: implement here the new added datastruct
 		}
 		else {
-			DataStruct = new ArrayList();
+			DataStruct = new ArrayList<byte[]>();
 		}
 	
 		int i, number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
