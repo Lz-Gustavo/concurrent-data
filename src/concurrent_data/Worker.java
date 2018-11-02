@@ -29,12 +29,15 @@ public class Worker implements Runnable{
 	private ArrayList<Long> latency;
 	
 	private byte[] write_value;
+	
+	private Semaphore mutex;
 		
 	public Worker(Object n_struct) {
 		
 		rand = new Random();
 		latency = new ArrayList();
 		log_operations = new ArrayList();
+		mutex = new Semaphore(1);
 		
 		if (n_struct instanceof CopyOnWriteArrayList)
 			DataStruct = (CopyOnWriteArrayList) n_struct;
@@ -54,13 +57,10 @@ public class Worker implements Runnable{
 		DataS = Integer.parseInt(Config.get("DATA:").toString());
 		int DataLen = Integer.parseInt(Config.get("LEN:").toString());
 
-		//String aux = new String();
 		write_value = new byte[DataLen];
 		for (int i = 0; i < DataLen; i++) {
 			write_value[i] = '-';
 		}
-		//System.out.println("Conteudo: " + Arrays.toString(write_value));
-		//write_value = aux.getBytes();
 	}
 	
 	@Override
@@ -190,77 +190,108 @@ public class Worker implements Runnable{
 		
 		//creating an iterator creates an immutable snapshot of the data
 		//in the list at the time iterator() was called
-		switch (DataS) {
-			case 0:
-				iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
-				
-				//idk if its possible to lock a specific memory region, because
-				//when iterator() is called it snapshots the entire data structure
-				//thats why the two implementations of array list used in this example
-				//use the iterator declaration as the only snapshot capture alternative,
-				//but have different latency in run-time overhead since CoW capture is
-				//much more costly.
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).get(pos);
-				break;
-			case 3:
-				((ArrayList) DataStruct).get(pos);
-				break;
-			case 4:
-				synchronized(DataStruct) {
+		
+		try {
+			switch (DataS) {
+				case 0:
+					iterator = ((CopyOnWriteArrayList) DataStruct).iterator();
+
+					//idk if its possible to lock a specific memory region, because
+					//when iterator() is called it snapshots the entire data structure
+					//thats why the two implementations of array list used in this example
+					//use the iterator declaration as the only snapshot capture alternative,
+					//but have different latency in run-time overhead since CoW capture is
+					//much more costly.
+					break;
+				case 1:
+					((ConcurrentMap) DataStruct).get(pos);
+					break;
+				case 3:
 					((ArrayList) DataStruct).get(pos);
-				}	break;
-			default:
-				break;
+					break;
+				case 4:
+					synchronized(DataStruct) {
+						((ArrayList) DataStruct).get(pos);
+					}	break;
+				case 5:
+					mutex.acquire();
+					((ArrayList) DataStruct).get(pos);
+					mutex.release();
+					break;
+				default:
+					break;
+			}
+			++num_read;
 		}
-		++num_read;
+		catch (Exception e) {
+			System.out.println("ReadOpExcep: "+e);
+		}
 	}
 	
 	public void Write(byte[] x, int pos) throws InterruptedException {
 		//write operation on the specific structure
-		switch (DataS) {
-			case 0:
-				((CopyOnWriteArrayList) DataStruct).set(pos, x);
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).put(pos, x);
-				break;
-			case 3:
-				((ArrayList) DataStruct).set(pos, x);
-				break;
-			case 4:
-				synchronized(DataStruct) {
-					((ArrayList) DataStruct).set(pos, x);
-				}	break;
-			default:
-				break;
-		}
 		
-		++num_write;
+		try {
+			switch (DataS) {
+				case 0:
+					((CopyOnWriteArrayList) DataStruct).set(pos, x);
+					break;
+				case 1:
+					((ConcurrentMap) DataStruct).put(pos, x);
+					break;
+				case 3:
+					((ArrayList) DataStruct).set(pos, x);
+					break;
+				case 4:
+					synchronized(DataStruct) {
+						((ArrayList) DataStruct).set(pos, x);
+					}	break;
+				case 5:
+					mutex.acquire();
+					((ArrayList) DataStruct).set(pos, x);
+					mutex.release();
+					break;
+				default:
+					break;
+			}
+
+			++num_write;
+		}
+		catch (Exception e) {
+			System.out.println("WriteOpExcep: "+e);
+		}
 	}
 	
 	public void Remove(int pos) {
 		
-		switch (DataS) {
-			case 0:
-				((CopyOnWriteArrayList) DataStruct).set(pos, " ");
-				break;
-			case 1:
-				((ConcurrentMap) DataStruct).remove(pos);
-				break;
-			case 3:
-				((ArrayList) DataStruct).set(pos, " ");
-				break;
-			case 4:
-				synchronized(DataStruct) {
+		try {
+			switch (DataS) {
+				case 0:
+					((CopyOnWriteArrayList) DataStruct).set(pos, " ");
+					break;
+				case 1:
+					((ConcurrentMap) DataStruct).remove(pos);
+					break;
+				case 3:
 					((ArrayList) DataStruct).set(pos, " ");
-				}	break;
-			default:
-				break;
+					break;
+				case 4:
+					synchronized(DataStruct) {
+						((ArrayList) DataStruct).set(pos, " ");
+					}	break;
+				case 5:
+					mutex.acquire();
+					((ArrayList) DataStruct).set(pos, " ");
+					mutex.release();
+					break;
+				default:
+					break;
+			}
+			++num_remove;
 		}
-		
-		++num_remove;
+		catch (Exception e) {
+			System.out.println("RemoveOpExcep: "+e);
+		}
 	}
 	
 	public void getStatus() {

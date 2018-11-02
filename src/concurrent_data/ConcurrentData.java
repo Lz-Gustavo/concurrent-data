@@ -18,6 +18,8 @@ public class ConcurrentData {
 	//choosen from config param.
 	private static Object DataStruct;
 	
+	private static byte[] data_value;
+	
 	public static HashMap ConfigParam(File config) {
 		// extract info from config file
 		HashMap info = new HashMap();
@@ -40,23 +42,30 @@ public class ConcurrentData {
 		//populates data structure with spaces, it can be syncronized for every test case of array
 		//list since its not going to be executed currently with any other structure method
 		
+		int DataLen = Integer.parseInt(config.get("LEN:").toString());
+		
+		data_value = new byte[DataLen];
+		for (int i = 0; i < DataLen; i++) {
+			data_value[i] = ' ';
+		}
+		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
 			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((CopyOnWriteArrayList) DataStruct).add(" ".getBytes());
+				((CopyOnWriteArrayList) DataStruct).add(data_value);
 			}
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 			
 			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((ConcurrentMap) DataStruct).put(i, " ".getBytes());
+				((ConcurrentMap) DataStruct).put(i, data_value);
 			}
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
 			synchronized(DataStruct) {
 				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-					((ArrayList) DataStruct).add(" ".getBytes());
+					((ArrayList) DataStruct).add(data_value);
 				}
 			}
 		}
