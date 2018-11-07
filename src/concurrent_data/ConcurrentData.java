@@ -43,35 +43,60 @@ public class ConcurrentData {
 		//list since its not going to be executed currently with any other structure method
 		
 		int DataLen = Integer.parseInt(config.get("LEN:").toString());
+		int ArraySize = Integer.parseInt(config.get("TAM:").toString());
 		
-		data_value = new byte[DataLen];
+		//for (int i = 0; i < DataLen; i++) {
+		//	System.out.printf(((CopyOnWriteArrayList) DataStruct).get(i)+" ");
+		//}
+		//System.out.println("");
+		
+		
+		//data_value = new byte[DataLen];
+		//for (int i = 0; i < DataLen; i++) {
+		//	data_value[i] = ' ';
+		//}
+		
+		String value = new String();
 		for (int i = 0; i < DataLen; i++) {
-			data_value[i] = ' ';
+			value += " ";
 		}
+		
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((CopyOnWriteArrayList) DataStruct).add(data_value);
+			for (int i = 0; i < ArraySize; i++) {
+				//((CopyOnWriteArrayList) DataStruct).add(data_value);
+				((CopyOnWriteArrayList) DataStruct).add(value.getBytes());
 			}
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+			for (int i = 0; i < ArraySize; i++) {
 				((ConcurrentMap) DataStruct).put(i, data_value);
 			}
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
 			synchronized(DataStruct) {
-				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
+				for (int i = 0; i < ArraySize; i++) {
 					((ArrayList) DataStruct).add(data_value);
 				}
 			}
 		}
+		
+		for (int i = 0; i < ArraySize; i++) {
+			
+			//System.out.printf((((CopyOnWriteArrayList) DataStruct).get(i)).toString()+" ");
+		
+			String aux = new String((byte[]) ((CopyOnWriteArrayList) DataStruct).get(i));
+			System.out.printf(aux+" ");
+		}
+		System.out.println("");
+		
+		//System.exit(0);
 	}
 	
-	public static void GenerateWorkers(HashMap config_param) {
+	public void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one	
 	
 		if (config_param.get("DATA:").equals("0")) {
@@ -137,6 +162,10 @@ public class ConcurrentData {
 	
 	public static void main(String[] args) {
 		
+		
+		ConcurrentData c = new ConcurrentData();
+		
+		
 		// /home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt
 		if (args.length == 0) {
 			System.out.println("Insert config file path name as argument");
@@ -150,7 +179,21 @@ public class ConcurrentData {
 			data.replace("WORKERS:", args[1]);
 
 		workers = new ArrayList<>();
-		GenerateWorkers(data);
+		c.GenerateWorkers(data);
+		
+		
+		//DEBUG
+		System.out.println("Array Preenchido: ");
+		for (int i = 0; i < Integer.parseInt(data.get("TAM:").toString()); i++) {
+		
+			String aux = new String((byte[]) ((CopyOnWriteArrayList) DataStruct).get(i));
+			System.out.printf(aux+" ");
+		}
+		System.out.println("");
+		
+		System.exit(0);
+		// END DEBUG
+		
 		
 		if (data.get("LOG:").toString().equals("1")) {
 			
@@ -256,4 +299,5 @@ public class ConcurrentData {
 		
 		System.exit(0);
 	}
+	
 }
