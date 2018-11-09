@@ -6,6 +6,8 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConcurrentData {
 	//vector is an obselete class because it doesnt implemment a sync. for 
@@ -16,7 +18,7 @@ public class ConcurrentData {
 
 	//IDEA: use an unique object pointer to reference a single datastruct, 
 	//choosen from config param.
-	private static Object DataStruct;
+	private Object DataStruct;
 	
 	private static byte[] data_value;
 	
@@ -38,7 +40,7 @@ public class ConcurrentData {
 		return info;
 	}
 	
-	public static void FillStruct(HashMap config) {
+	public void FillStruct(HashMap config) {
 		//populates data structure with spaces, it can be syncronized for every test case of array
 		//list since its not going to be executed currently with any other structure method
 		
@@ -58,15 +60,17 @@ public class ConcurrentData {
 		
 		String value = new String();
 		for (int i = 0; i < DataLen; i++) {
-			value += " ";
+			value += "1";
 		}
 		
-		
+		try {
 		if (DataStruct instanceof CopyOnWriteArrayList) {
 			
 			for (int i = 0; i < ArraySize; i++) {
 				//((CopyOnWriteArrayList) DataStruct).add(data_value);
-				((CopyOnWriteArrayList) DataStruct).add(value.getBytes());
+				//((CopyOnWriteArrayList) DataStruct).add(value.getBytes());
+				((CopyOnWriteArrayList) DataStruct).add(new byte[DataLen]);
+				Thread.sleep(500);
 			}
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
@@ -84,6 +88,11 @@ public class ConcurrentData {
 			}
 		}
 		
+		
+		System.out.println("Finished filling process!");
+		Thread.sleep(10000);
+		System.out.println("Started writing...");
+		
 		for (int i = 0; i < ArraySize; i++) {
 			
 			//System.out.printf((((CopyOnWriteArrayList) DataStruct).get(i)).toString()+" ");
@@ -94,6 +103,12 @@ public class ConcurrentData {
 		System.out.println("");
 		
 		//System.exit(0);
+	
+		}
+		catch (Exception e) {
+			System.err.println("excep. "+e);
+		}
+		
 	}
 	
 	public void GenerateWorkers(HashMap config_param) {
@@ -162,9 +177,7 @@ public class ConcurrentData {
 	
 	public static void main(String[] args) {
 		
-		
 		ConcurrentData c = new ConcurrentData();
-		
 		
 		// /home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt
 		if (args.length == 0) {
@@ -186,7 +199,7 @@ public class ConcurrentData {
 		System.out.println("Array Preenchido: ");
 		for (int i = 0; i < Integer.parseInt(data.get("TAM:").toString()); i++) {
 		
-			String aux = new String((byte[]) ((CopyOnWriteArrayList) DataStruct).get(i));
+			String aux = new String((byte[]) ((CopyOnWriteArrayList) c.DataStruct).get(i));
 			System.out.printf(aux+" ");
 		}
 		System.out.println("");
@@ -300,4 +313,37 @@ public class ConcurrentData {
 		System.exit(0);
 	}
 	
+	@Override
+	public void finalize() {
+		try {
+			DataStruct = this.DataStruct;
+		} 
+		finally {
+			try {
+				super.finalize();
+			} 
+			catch (Throwable ex) {
+				Logger.getLogger(ConcurrentData.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
+	}
+	
+	public void generateOOM() throws Exception {
+		int iteratorValue = 20;
+		System.out.println("\n=================> OOM test started..\n");
+		for (int outerIterator = 1; outerIterator < 20; outerIterator++) {
+			System.out.println("Iteration " + outerIterator + " Free Mem: " + Runtime.getRuntime().freeMemory());
+			int loop1 = 2;
+			int[] memoryFillIntVar = new int[iteratorValue];
+			// feel memoryFillIntVar array in loop..
+			do {
+				memoryFillIntVar[loop1] = 0;
+				loop1--;
+			} while (loop1 > 0);
+			iteratorValue = iteratorValue * 5;
+			System.out.println("\nRequired Memory for next loop: " + iteratorValue);
+			Thread.sleep(1000);
+		}
+	}
+ 
 }

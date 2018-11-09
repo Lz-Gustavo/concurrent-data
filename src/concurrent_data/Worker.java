@@ -10,12 +10,14 @@ import java.util.concurrent.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Worker implements Runnable{
 	
 	private HashMap Config;
 	
-	private final Object DataStruct;
+	private Object DataStruct;
 	private int DataS;
 	private final Random rand;
 	
@@ -392,5 +394,20 @@ public class Worker implements Runnable{
 		}
 		
 		return Bytes;
+	}
+	
+	@Override
+	public void finalize() {
+		try {
+			DataStruct = this.DataStruct;
+		} 
+		finally {
+			try {
+				super.finalize();
+			} 
+			catch (Throwable ex) {
+				Logger.getLogger(ConcurrentData.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		}
 	}
 }
