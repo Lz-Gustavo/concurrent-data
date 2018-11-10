@@ -69,9 +69,6 @@ public class Worker implements Runnable{
 		if (Config.get("LOG:").toString().equals("1"))
 			System.out.println("Worker Running!");
 		
-		// TODO check latency between operations dispatch-finish executing
-		// and heap memory in-use by each simulation
-		
 		try {
 			int read_perc = Integer.parseInt(Config.get("READ(%):").toString());
 			int write_perc = Integer.parseInt(Config.get("WRITE(%):").toString());
@@ -85,8 +82,6 @@ public class Worker implements Runnable{
 			int random, rand_pos;
 			int total_ops = Integer.parseInt(Config.get("OPS:").toString());
 			int n_ops = total_ops/Integer.parseInt(Config.get("WORKERS:").toString());
-			
-			//System.out.println("Execute "+n_ops+" operations.");
 			
 			if ((Integer.parseInt(Config.get("SUPERVISOR:").toString())) > 0) {
 				

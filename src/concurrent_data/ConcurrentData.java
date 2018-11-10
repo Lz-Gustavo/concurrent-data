@@ -8,17 +8,15 @@ import java.util.HashMap;
 import java.util.concurrent.*;
 
 public class ConcurrentData {
-	//vector is an obselete class because it doesnt implemment a sync. for 
-	//a whole sequence of operations, making the lock manage too costly
+	// vector is an obselete class because it doesnt implemment a sync. for 
+	// a whole sequence of operations, making the lock manage too costly
 	
 	private static ArrayList<Worker> workers;
 	private static Thread workers_t[];
 
-	//IDEA: use an unique object pointer to reference a single datastruct, 
-	//choosen from config param.
-	private static Object DataStruct;
-	
-	private static byte[] data_value;
+	// IDEA: use an unique object pointer to reference a single datastruct, 
+	// choosen from config param.
+	private Object DataStruct;
 	
 	public static HashMap ConfigParam(File config) {
 		// extract info from config file
@@ -38,42 +36,49 @@ public class ConcurrentData {
 		return info;
 	}
 	
-	public static void FillStruct(HashMap config) {
-		//populates data structure with spaces, it can be syncronized for every test case of array
-		//list since its not going to be executed currently with any other structure method
+	public void FillStruct(HashMap config) {
+		// populates data structure with spaces, it can be syncronized for every test case of array
+		// list since its not going to be executed currently with any other structure method
 		
 		int DataLen = Integer.parseInt(config.get("LEN:").toString());
-		
-		data_value = new byte[DataLen];
-		for (int i = 0; i < DataLen; i++) {
-			data_value[i] = ' ';
-		}
+		int ArraySize = Integer.parseInt(config.get("TAM:").toString());
 		
 		if (DataStruct instanceof CopyOnWriteArrayList) {
+			// it is necessary to create an array of initial capacity and pass its copy to CoW. 
+			// Because CoWAL does not have that kind of constructor, and calling 
+			// ((CopyOnWriteArrayList) DataStruct).add(new byte[DataLen]);
+			// to fill it with 10kk elements takes more than an hour.
 			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((CopyOnWriteArrayList) DataStruct).add(data_value);
+			ArrayList aux = new ArrayList<byte[]>(ArraySize); 
+			
+			for (int i = 0; i < ArraySize; i++) {
+				aux.add(new byte[DataLen]);	
 			}
+			
+			DataStruct = new CopyOnWriteArrayList<byte[]>(aux);
+			
 		}
 		else if (DataStruct instanceof ConcurrentMap) {
 			
-			for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-				((ConcurrentMap) DataStruct).put(i, data_value);
+			for (int i = 0; i < ArraySize; i++) {
+				((ConcurrentMap) DataStruct).put(i, new byte[DataLen]);
 			}
 		}
 		else if (DataStruct instanceof ArrayList) {
 			
 			synchronized(DataStruct) {
-				for (int i = 0; i < Integer.parseInt(config.get("TAM:").toString()); i++) {
-					((ArrayList) DataStruct).add(data_value);
+				for (int i = 0; i < ArraySize; i++) {
+					((ArrayList) DataStruct).add(new byte[DataLen]);
 				}
 			}
 		}
 	}
 	
-	public static void GenerateWorkers(HashMap config_param) {
+	public void GenerateWorkers(HashMap config_param) {
 		// instantiate worker objects and thread each one	
 	
+		int size = Integer.parseInt(config_param.get("TAM:").toString());
+		
 		if (config_param.get("DATA:").equals("0")) {
 			DataStruct = new CopyOnWriteArrayList<byte[]>();
 		}
@@ -84,11 +89,13 @@ public class ConcurrentData {
 			// TODO: implement here the new added datastruct
 		}
 		else {
-			DataStruct = new ArrayList<byte[]>();
+			DataStruct = new ArrayList<byte[]>(size);
 		}
 	
 		int i, number_w = Integer.parseInt(config_param.get("WORKERS:").toString());
 		FillStruct(config_param);
+		
+		System.out.println("filled datastruct");
 		
 		for (i = 0; i < number_w; i++) {
 			
@@ -137,11 +144,12 @@ public class ConcurrentData {
 	
 	public static void main(String[] args) {
 		
-		// /home/lzgustavo/NetBeansProjects/concurrent-data/test/config.txt
 		if (args.length == 0) {
 			System.out.println("Insert config file path name as argument");
 			return;
 		}
+		
+		ConcurrentData c = new ConcurrentData();
 		
 		File config_file = new File(args[0]);
 		HashMap data = ConfigParam(config_file);
@@ -150,7 +158,7 @@ public class ConcurrentData {
 			data.replace("WORKERS:", args[1]);
 
 		workers = new ArrayList<>();
-		GenerateWorkers(data);
+		c.GenerateWorkers(data);
 		
 		if (data.get("LOG:").toString().equals("1")) {
 			
@@ -160,7 +168,6 @@ public class ConcurrentData {
 			}
 		}
 		
-		// /home/lzgustavo/NetBeansProjects/concurrent-data
 		Path file_remove = Paths.get("./test/log-remove-"+data.get("WORKERS:").toString()+"t.txt");
 		Path file_read = Paths.get("./test/log-read-"+data.get("WORKERS:").toString()+"t.txt");
 		Path file_write = Paths.get("./test/log-write-"+data.get("WORKERS:").toString()+"t.txt");
