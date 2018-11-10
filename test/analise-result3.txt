@@ -1,0 +1,58 @@
+-> Objetivo:
+	* Avaliar o funcionamento da aplicação após a adição da funcionalidade onde é possivel especificar um tamanho N de chars a serem escritos na operacao de escrita
+	* Configuração padrão adotada em todos casos de teste:
+		- operacoes de escrita sobre CoWArrayList
+		- 10 worker threads
+		- 1min
+
+====Caso BASE: operacoes de escrita com valor "conteudo", string de 10 chars
+54972790
+56508106
+54548045
+56787681
+55809735
+58594988
+55921044
+55504318
+57099666
+58935090
+
+====Caso 1: byte[] previamente declarado inves de escrita por string
+3066615
+3039086
+3140647
+3188004
+3138206
+3077749
+3068090
+2913864
+3151286
+3170712
+
+====Caso 2: string previamente declarada, resultado pior q anterior com "conteudo"
+3143404
+2855238
+2756487
+2991813
+3124982
+2953788
+3084447
+2932549
+3311423
+3170377
+
+====Caso 3: repassado um novo valor de string que eh criado no momento da chamada à write, (new String(write_value))
+2414866
+2403613
+2661844
+2593741
+2635099
+2474570
+2606152
+2576740
+2589502
+2532130
+
+-> Conclusao:
+	* Realizar a escrita de um conteudo padrão previamente setado resultou em uma grande degração de desempenho
+	* Um tanto frustante eu diria, uma vez que mesmo após implementar toda escrita de conteudo byte[] e funcao de serializacao para depurar, nao encontrei o motivo deste overhead gerado
